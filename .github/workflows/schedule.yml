@@ -1,0 +1,36 @@
+name: Weekly Manga Ranking
+
+on:
+  schedule:
+    - cron: "0 6 * * 3"  # 毎週水曜 6:00 JST
+  workflow_dispatch:
+
+permissions:
+  contents: write  # ← これを必ず追加！
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scraper
+        run: python scrape_ranking.py
+
+      - name: Commit and push results
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add weekly_ranking.xlsx
+          git commit -m "Update weekly ranking [$(date '+%Y-%m-%d')]" || echo "No changes to commit"
+          git push
